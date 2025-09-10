@@ -1,7 +1,7 @@
 **Network DDoS Simulation**
 
-**Author: **Alex Valentin
-**Course: **CS 4632 Section W01
+**Author:** Alex Valentin
+**Course:** CS 4632 Section W01
 
 **Project Overview**
 The aim of this project is to analyze the impact of malicious network traffic on network systems. This area
