@@ -1,6 +1,7 @@
 **Network DDoS Simulation**
 
 **Author:** Alex Valentin
+
 **Course:** CS 4632 Section W01
 
 **Project Overview**
