@@ -1,0 +1,2 @@
+class NetworkServer:
+    pass
