@@ -1,6 +1,7 @@
 # Network DDoS Simulation
 
 **Author:** Alex Valentin
+
 **Course:** CS 4632 Section W01
 
 ## Project Overview
@@ -10,7 +11,8 @@ The aim of this project is to analyze the impact of malicious network traffic on
 ### Installing Dependencies
 Ensure that **Python Version 3.x** is installed on your local machine and have the required packages installed:
 
-```pip install simpy numpy matplotlib pytest```
+```bash
+pip install simpy numpy matplotlib pytest
 
 Dependency versions can be found in [requirements.txt](requirements.txt)
 
