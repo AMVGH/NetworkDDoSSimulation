@@ -13,6 +13,7 @@ Ensure that **Python Version 3.x** is installed on your local machine and have t
 
 ```bash
 pip install simpy numpy matplotlib pytest
+```
 
 Dependency versions can be found in [requirements.txt](requirements.txt)
 
