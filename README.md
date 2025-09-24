@@ -18,7 +18,7 @@ pip install simpy numpy matplotlib pytest
 Dependency versions can be found in [requirements.txt](requirements.txt)
 
 ### Running the Simulation
-In order to run the simulation clone the repository to your local environment and make sure all necessary dependencies are installed. After this, simply update the simulation configuration variables found in [SimulationExecutive.py](src/SimulationExecutive.py), once the configuration is set to your liking simply navigate to [main.py](src/main.py) and run the simulation. At the current moment, process outputs will be written to the terminal until the data collection logic is implemented.
+In order to run the simulation clone the repository to your local environment and make sure all necessary dependencies are installed. After this, simply update the simulation configuration variables found in [config.py](src/config.py), once the configuration is set to your liking simply navigate to [main.py](src/main.py) and run the simulation. At the current moment, process outputs will be written to the terminal until the data collection logic is implemented.
 
 ## Project Status
 At the current moment, class models and their properties have been implemented across the board except for certain class functions that drive logic for the simulation. Methods that handle simulation processes and communication between classes are in development, and are expected to show core simulation logic by the time of the M2 deliverable. There have been very minute changes from the original UML class diagrams, but no significant pivots from the initial proposal. Data collection logic is imperative to implement once the core simulation logic is finished, so that the user can visualize statistics regarding the simulation run.

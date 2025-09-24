@@ -1,19 +1,9 @@
 import simpy
-from models.Network import Network
-from models.Botnet import Botnet
-from models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
-
-
-#Simulation Parameters
-SIMULATION_DURATION=1000
-
-#Legitimate Network Parameters
-LEGITIMATE_TRAFFIC_RATE=1
-LEGITIMATE_CLIENT_COUNT=2
-
-#Malicious Network Parameters
-MALICIOUS_TRAFFIC_RATE=2
-MALICIOUS_CLIENT_COUNT=3
+from src.models.Network import Network
+from src.models.Botnet import Botnet
+from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
+from src.utils.GenericEnums import TRAFFICTYPES
+from config import *
 
 #TODO: Configure how the simulation is going to be run; config file to be parsed or params read from executive body
 class SimulationExecutive:
@@ -22,18 +12,24 @@ class SimulationExecutive:
         self.target_network = Network(self.env)
         self.botnet = Botnet(
             self.env,
-            MALICIOUS_TRAFFIC_RATE,
+            TRAFFICTYPES.MALICIOUS.value,
             MALICIOUS_CLIENT_COUNT,
-            self.target_network
+            MALICIOUS_TRAFFIC_RATE,
+            self.target_network,
+            MALICIOUS_LOAD_SIZE,
         )
         self.legitimate_network = LegitimateTrafficNetwork(
             self.env,
-            LEGITIMATE_TRAFFIC_RATE,
+            TRAFFICTYPES.LEGITIMATE.value,
             LEGITIMATE_CLIENT_COUNT,
-            self.target_network
+            LEGITIMATE_TRAFFIC_RATE,
+            self.target_network,
+            LEGITIMATE_LOAD_SIZE,
         )
 
-#P.O.C --> Expand logic and build out core functionality
+    #TODO: Build out and expand core functionality
     def run_simulation(self):
-        #run processes to generate requests to hit the target networks
-        print('Simulation implementation TBI')
+        #Runs processes to generate requests and hit the target network
+        self.botnet.start_traffic()
+        self.legitimate_network.start_traffic()
+        self.env.run(until=SIMULATION_DURATION)
