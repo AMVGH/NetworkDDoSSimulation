@@ -5,13 +5,14 @@ from src.models.LegitimateNetworkClient import LegitimateNetworkClient
 from src.utils.GenericEnums import TRAFFICTYPES
 
 class BaseNetworkModel:
-    def __init__(self, env: simpy.Environment, network_type: str, client_count: int, request_rate: float, target_network: Network, incoming_load_size: float):
+    def __init__(self, env: simpy.Environment, network_type: str, client_count: int, request_rate: float, target_network: Network, load_size_lower: float, load_size_upper: float):
         self.env = env
         self.network_type = network_type
         self.client_count = client_count
         self.request_rate = request_rate
         self.target_network = target_network
-        self.incoming_load_size = incoming_load_size
+        self.load_size_lower = load_size_lower
+        self.load_size_upper = load_size_upper
         self.network_clients = []
 
         #Fills the network_client list with corresponding client objects
@@ -43,5 +44,6 @@ class BaseNetworkModel:
             self.env.process(client.generate_request(
                 source_id=f"{client.client_id}",
                 traffic_type=f"{client.traffic_type}",
-                load_size=self.incoming_load_size
+                load_size_lower=self.load_size_lower,
+                load_size_upper=self.load_size_upper
             ))

@@ -1,4 +1,5 @@
 import simpy
+import random
 from src.models.Network import Network
 from src.models.Request import Request
 
@@ -13,14 +14,15 @@ class BaseNetworkClient:
     # TODO: Traffic Generation Enhancements
     # - Resolve flat rate load sizes, should not be a consistent load size and on average mean load size for MALICIOUS > LEGITIMATE
 
-    def generate_request(self, source_id: str, traffic_type: str, load_size: float):
+    def generate_request(self, source_id: str, traffic_type: str, load_size_lower: float, load_size_upper: float):
         while True:
             yield self.env.timeout(1 / self.request_rate)
+            request_load = random.uniform(load_size_lower, load_size_upper)
+            request_load = round(request_load, 4)
             request = Request(
                 source_id,
                 traffic_type,
-                load_size
+                request_load
             )
-
             #Send request to the Network
             self.target_network.process_request(request)

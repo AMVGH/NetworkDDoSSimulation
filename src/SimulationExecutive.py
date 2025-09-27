@@ -5,7 +5,6 @@ from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
 from src.utils.GenericEnums import TRAFFICTYPES
 from config import *
 
-#TODO: Configure how the simulation is going to be run; config file to be parsed or params read from executive body
 class SimulationExecutive:
     def __init__(self):
         self.env = simpy.Environment()
@@ -16,7 +15,8 @@ class SimulationExecutive:
             MALICIOUS_CLIENT_COUNT,
             MALICIOUS_TRAFFIC_RATE,
             self.target_network,
-            MALICIOUS_LOAD_SIZE,
+            MALICIOUS_LOAD_SIZE_LOWER,
+            MALICIOUS_LOAD_SIZE_UPPER
         )
         self.legitimate_network = LegitimateTrafficNetwork(
             self.env,
@@ -24,7 +24,8 @@ class SimulationExecutive:
             LEGITIMATE_CLIENT_COUNT,
             LEGITIMATE_TRAFFIC_RATE,
             self.target_network,
-            LEGITIMATE_LOAD_SIZE,
+            LEGITIMATE_LOAD_SIZE_LOWER,
+            LEGITIMATE_LOAD_SIZE_UPPER
         )
 
     #TODO: Build out and expand core functionality
@@ -33,3 +34,5 @@ class SimulationExecutive:
         self.botnet.start_traffic()
         self.legitimate_network.start_traffic()
         self.env.run(until=SIMULATION_DURATION)
+
+        self.target_network.network_servers[0].print_simulation_outcomes()
