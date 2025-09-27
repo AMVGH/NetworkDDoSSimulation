@@ -1,7 +1,7 @@
 import simpy
 
 from src.models.Request import Request
-from src.config import SERVER_TIMEOUT, REQUEST_TIMEOUT
+from src.config import SERVER_TIMEOUT, REQUEST_TIMEOUT, INCREASED_UTILIZATION, HIGH_UTILIZATION, CRITICAL_UTILIZATION
 
 class NetworkServer:
     def __init__(self, env: simpy.Environment, server_id: str, processing_power: float, max_requests_concurrent: int, max_request_queue_len: int):
@@ -20,9 +20,9 @@ class NetworkServer:
         self.current_request = None
 
         #Utilization thresholds to help guide logic to model server degradation impacting performance
-        self.increased_utilization = .70
-        self.high_utilization = .90
-        self.critical_utilization = .99
+        self.increased_utilization = INCREASED_UTILIZATION
+        self.high_utilization = HIGH_UTILIZATION
+        self.critical_utilization = CRITICAL_UTILIZATION
 
         #Request queue and worker process
         self.request_process_worker = simpy.Resource(env, self.max_requests_concurrent)
