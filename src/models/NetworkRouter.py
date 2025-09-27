@@ -9,7 +9,6 @@ class NetworkRouter:
     #TODO: Implement adaptive routing algorithm and load balancing for traffic
     def route_request(self, request: Request):
         #Zero latency assumption as outlined in the proposal; so analyze server load, capacity, heath, errors, utilization
-        #print(f"Route me cuh request {request.request_id} needs a server cuh we came from client {request.source_id} cuh we got a load of {request.load_size} cuh")
         server = self.authorized_servers[0]
         server.receive_request(request)
 

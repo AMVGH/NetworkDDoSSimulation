@@ -18,9 +18,8 @@ class Network:
         ) for i in range(NUM_SERVERS)]
         self.network_router = NetworkRouter(self.network_servers)
 
-    #TODO: Implement server routing, at the moment just prints that requests have arrived as a P.O.C
+    #TODO: Implement server routing
     def process_request(self, request: Request):
         self.incoming_request_count += 1
         request.set_request_id(self.incoming_request_count)
         self.network_router.route_request(request)
-        #print(f"Network ({self.name}) has received request ID: {self.request_count}, Source: {request.source_id}, TrafficType: {request.traffic_type}, LoadSize: {request.load_size}, at {self.env.now}")
