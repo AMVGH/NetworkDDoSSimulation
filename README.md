@@ -31,6 +31,7 @@ The main components in the simulation include the following:
    - Inherits everything from BaseNetworkClient, no differences exist between implementation and proposal.
 3. **MaliciousNetworkClient**
    - Inherits everything from BaseNetworkClient, isEnabled and the functions to set and get the network state are not implemented at the moment and may potentially be discarded due to how processes will be handled in SimPy.
+
 4.**BaseNetworkModel (NEW)**
    - Base class that both Botnet and LegitimateTrafficNetwork derive from, at their core, Botnet and LegitimateTraffic network exhibit the same behavior, so I chose to capture this behavior in an associated base class as opposed to writing two functions that will both generate requests to hit the target network. The properties in the base class are as follows: env, network_type, client_count, request_rate, traget_network, load_size_lower, load_size_upper, and network_clients. The start, duration, and process propeties do not exist in this base class as opposed to the UML Class Diagram outlined in the initial proposal. While the base class properly captures the behavior of what was outlined for the two classes, there was no need for these fields due to the nature of the SimPy library and how processes are managed. 
 5. **Botnet**
