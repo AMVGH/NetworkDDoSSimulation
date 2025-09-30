@@ -25,7 +25,6 @@ class NetworkServer:
         self.queue_length = 0
         self.server_health = 0 # Extrapolation of CPU and Queue utilization
         self.is_server_online = True
-        self.current_request = None
 
         #Utilization thresholds to help guide logic to model server degradation impacting performance
         self.increased_utilization = INCREASED_UTILIZATION
@@ -38,7 +37,6 @@ class NetworkServer:
 
         #Request Tracking Metrics
         self.total_requests_processed = 0
-        self.failed_requests = 0
         self.dropped_requests_server_offline = 0
         self.dropped_requests_queue_full = 0
         self.dropped_requests_timeout = 0
