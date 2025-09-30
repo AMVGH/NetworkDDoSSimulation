@@ -5,9 +5,10 @@ class Request:
         self.traffic_type = traffic_type
         self.load_size = load_size
         self.request_id = None
-        self.is_served = False
         self.arrival_time = None
         self.served_time = None
+        self.is_served = False
+        self.is_routed = False
 
     def set_request_id(self, request_id: int):
         if self.request_id is not None:
@@ -27,6 +28,10 @@ class Request:
     def set_is_served(self, is_served):
         if self.is_served:
             raise ValueError("Request already served")
-        else:
-            self.is_served = is_served
+        else: self.is_served = is_served
+
+    def mark_routed(self):
+        if self.is_routed:
+            raise ValueError("Request already routed")
+        else: self.is_routed = True
 

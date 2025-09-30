@@ -7,8 +7,6 @@ from src.config import PROCESSING_POWER, MAX_REQUESTS_CONCURRENT, MAX_REQUEST_QU
 class Network:
     def __init__(self, env: simpy.Environment):
         self.env = env
-        self.name = "KSU Network"
-        self.incoming_request_count = 0
         self.network_servers = [NetworkServer(
             self.env,
             f"NetworkServer{i}",
@@ -17,9 +15,12 @@ class Network:
             MAX_REQUEST_QUEUE_LENGTH,
         ) for i in range(NUM_SERVERS)]
         self.network_router = NetworkRouter(self.network_servers)
+        self.incoming_request_count = 0
+        self.dropped_no_server_available = 0
 
-    #TODO: Implement server routing
     def process_request(self, request: Request):
         self.incoming_request_count += 1
         request.set_request_id(self.incoming_request_count)
-        self.network_router.route_request(request)
+        accepted = self.network_router.route_request(request)
+        if not accepted:
+            self.dropped_no_server_available += 1

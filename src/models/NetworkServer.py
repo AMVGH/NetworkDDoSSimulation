@@ -1,7 +1,14 @@
 import simpy
 
 from src.models.Request import Request
-from src.config import SERVER_TIMEOUT, REQUEST_TIMEOUT, INCREASED_UTILIZATION, HIGH_UTILIZATION, CRITICAL_UTILIZATION
+from src.config import (
+    SERVER_TIMEOUT,
+    REQUEST_TIMEOUT,
+    INCREASED_UTILIZATION,
+    HIGH_UTILIZATION,
+    CRITICAL_UTILIZATION,
+    CPU_UTILIZATION_HEALTH_WEIGHT,
+    QUEUE_UTILIZATION_HEALTH_WEIGHT)
 
 class NetworkServer:
     def __init__(self, env: simpy.Environment, server_id: str, processing_power: float, max_requests_concurrent: int, max_request_queue_len: int):
@@ -13,9 +20,10 @@ class NetworkServer:
 
         #Fields for ongoing health and utilization
         self.current_requests_concurrent = 0
-        self.cpu_utilization = 0.0 # 0.0 - 1.0
-        self.process_queue_utilization = 0.0
+        self.cpu_utilization = 0.0 #(Range 0.0 - 1.0)
+        self.process_queue_utilization = 0.0 #(Range 0.0 - 1.0)
         self.queue_length = 0
+        self.server_health = 0 # Extrapolation of CPU and Queue utilization
         self.is_server_online = True
         self.current_request = None
 
@@ -24,20 +32,21 @@ class NetworkServer:
         self.high_utilization = HIGH_UTILIZATION
         self.critical_utilization = CRITICAL_UTILIZATION
 
-        #Request queue and worker process
+        #Request Queue and Worker Processes
         self.request_process_worker = simpy.Resource(env, self.max_requests_concurrent)
         self.request_queue = simpy.Store(env)
 
-        # Request tracking metrics
+        #Request Tracking Metrics
         self.total_requests_processed = 0
         self.failed_requests = 0
         self.dropped_requests_server_offline = 0
         self.dropped_requests_queue_full = 0
         self.dropped_requests_timeout = 0
 
+        #Start Process
         self.process_requests = env.process(self.process_request())
 
-    def calculate_processing_time(self, request: Request) -> float:
+    def calculate_processing_time(self, request: Request):
         """
         Calculates the processing time for a request based on the load size and the current CPU utilization.
         """
@@ -52,30 +61,29 @@ class NetworkServer:
             process_time *= server_degrade_factor
         return process_time
 
-    def update_utilization(self):
-        self.update_cpu_utilization()
-        #self.update_queue_utilization()
-
     def update_cpu_utilization(self):
-        """
-        Updates the server CPU utilization by dividing the current concurrent requests by the max concurrent requests allowed.
-        """
         self.cpu_utilization = self.current_requests_concurrent / self.max_requests_concurrent
 
     def update_queue_utilization(self):
-        """
-        Updates the server process queue utilization by dividing the current queue length by the max queue length.
-        """
         self.process_queue_utilization = self.queue_length / self.max_request_queue_len
 
+    def update_server_health(self):
+        self.server_health = (CPU_UTILIZATION_HEALTH_WEIGHT * self.cpu_utilization
+                              + QUEUE_UTILIZATION_HEALTH_WEIGHT * self.process_queue_utilization)
+
     def shutdown_server(self):
+        """
+        Servers should be coming online and offline, where if the queue is full it is set offline and set online once timeout has elapsed.
+        """
         self.is_server_online = False
         yield self.env.timeout(SERVER_TIMEOUT)
         print(f"[{self.env.now}] Server is back online.")
         self.is_server_online = True
 
-    #Servers should be coming online and offline, where if the queue is full it is set offline and set online once timeout has elapsed
     def receive_request(self, request: Request):
+        if request.is_routed:
+            return False
+
         if len(self.request_queue.items) >= self.max_request_queue_len:
             if self.is_server_online:
                 print(f"[{self.env.now}] Server is shutting down.")
@@ -93,12 +101,15 @@ class NetworkServer:
                   f"Dropped requests (SOL): {self.dropped_requests_server_offline}")
             return False
 
-        #Request is stamped with its arrival time
-        request.set_arrival_time(self.env.now)
 
-        #TODO: Determine utilization update methodology
+        #Request is stamped with its arrival time and is marked as routed
+        request.set_arrival_time(self.env.now)
+        request.mark_routed()
+
         self.request_queue.put(request)
         self.queue_length = len(self.request_queue.items)
+        self.update_queue_utilization()
+        self.update_server_health()
         print(f"[{self.env.now}] Request {request.request_id} (Origin {request.source_id}) has successfully been added to process queue.")
         return True
 
@@ -147,7 +158,7 @@ class NetworkServer:
                     self.current_requests_concurrent -= 1
                     self.update_cpu_utilization()
 
-                    print(f"[{self.env.now:.2f}] Working process FINISH. CPU utilization: {self.cpu_utilization} (Should be 0), Queue length: {self.queue_length}")
+                    print(f"[{self.env.now}] Working process FINISH. CPU utilization: {self.cpu_utilization} (Should be 0), Queue length: {self.queue_length}")
 
                     request.set_served_time(self.env.now)
                     request.set_is_served(True)
@@ -160,8 +171,7 @@ class NetworkServer:
     #TODO: Move this into data collection class and expand
     def print_simulation_outcomes(self):
         print()
-        print("=========== SIMULATION OUTCOMES ==========")
+        print(f"=========== SIMULATION OUTCOMES [Server {self.server_id}] ==========")
         print(f"Served Requests: {self.total_requests_processed}")
         print(f"Dropped Requests Queue Full: {self.dropped_requests_queue_full}")
-        print(f"Dropped Requests Server Offline: {self.dropped_requests_server_offline}")
         print(f"Dropped Requests Process Timeout: {self.dropped_requests_timeout}")
