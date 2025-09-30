@@ -26,7 +26,7 @@ At the current moment, class models and their properties have been implemented a
 ## Architecture Overview
 The main components in the simulation include the following: 
 
-1. **BaseNetworkClient**
+- **BaseNetworkClient**
    - Base class that the two network clients derive from, no differences exist between what is implemented and what is proposed in the UML Class diagram besides the addition of a traffic_type field to capture the type of traffic the client object will be sending. The client objects are still designed to generate requests to send to the Network and will behave in the same fashion as outlined in the initial proposal.
   
 2. **LegitimateNetworkClient**
