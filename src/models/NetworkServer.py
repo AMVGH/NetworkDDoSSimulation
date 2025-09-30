@@ -145,6 +145,7 @@ class NetworkServer:
                     self.current_requests_concurrent += 1
                     self.update_cpu_utilization()
 
+                    #TODO: Verify utilization metrics are being updated properly seems as though being read wrong - * 100 to get log %
                     print(f"[{self.env.now}] Request {request.request_id} has received a worker process and has STARTED processing. "
                           f"Concurrent requests: {self.current_requests_concurrent}, CPU utilization: {self.cpu_utilization}, Queue length: {self.queue_length}")
 
@@ -166,12 +167,4 @@ class NetworkServer:
             else:
                 self.dropped_requests_timeout += 1
                 print(
-                    f"[{self.env.now:.2f}] Request {request.request_id} DROPPED (timeout waiting for worker). Queue length: {self.queue_length}, CPU utilization: {self.cpu_utilization:.2f}")
-
-    #TODO: Move this into data collection class and expand
-    def print_simulation_outcomes(self):
-        print()
-        print(f"=========== SIMULATION OUTCOMES [Server {self.server_id}] ==========")
-        print(f"Served Requests: {self.total_requests_processed}")
-        print(f"Dropped Requests Queue Full: {self.dropped_requests_queue_full}")
-        print(f"Dropped Requests Process Timeout: {self.dropped_requests_timeout}")
+                    f"[{self.env.now}] Request {request.request_id} DROPPED (timeout waiting for worker). Queue length: {self.queue_length}, CPU utilization: {self.cpu_utilization:.2f}")
