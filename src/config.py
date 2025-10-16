@@ -1,7 +1,7 @@
 #TODO: Research param rules to use to best model these interactions (i.e.: Avg malicious request is 4:1 and DDoS Traffic Rate should be x:y)
 
 #Simulation Parameters
-SIMULATION_DURATION=500
+SIMULATION_DURATION=120
 NUM_SERVERS=10
 
 #Network Server Parameters
@@ -13,6 +13,7 @@ MAX_REQUEST_QUEUE_LENGTH=500
 CPU_UTILIZATION_HEALTH_WEIGHT=0.4
 QUEUE_UTILIZATION_HEALTH_WEIGHT=0.6
 OFFLINE_CLEAR_THRESHOLD=0.6
+HIGH_UTILIZATION_REJECTION_RATE = 0.2
 
 #Network Server Utilization Thresholds
 INCREASED_UTILIZATION=.70

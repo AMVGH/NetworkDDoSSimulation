@@ -1,4 +1,3 @@
-
 import simpy
 import random as random
 
@@ -10,7 +9,9 @@ from src.config import (
     HIGH_UTILIZATION,
     CRITICAL_UTILIZATION,
     CPU_UTILIZATION_HEALTH_WEIGHT,
-    QUEUE_UTILIZATION_HEALTH_WEIGHT, OFFLINE_CLEAR_THRESHOLD)
+    QUEUE_UTILIZATION_HEALTH_WEIGHT,
+    OFFLINE_CLEAR_THRESHOLD,
+    HIGH_UTILIZATION_REJECTION_RATE)
 
 class NetworkServer:
     def __init__(self, env: simpy.Environment, server_id: str, processing_power: float, max_requests_concurrent: int, max_request_queue_len: int):
@@ -23,7 +24,7 @@ class NetworkServer:
         #Fields for ongoing health and utilization
         self.cpu_utilization = 0.0 #(Range 0.0 - 1.0)
         self.process_queue_utilization = 0.0 #(Range 0.0 - 1.0)
-        self.server_health = 0 # Extrapolation of CPU and Queue utilization
+        self.server_health = 0 #Extrapolation of CPU and Queue Utilization
         self.is_server_online = True
 
         #Utilization thresholds to help guide logic to model server degradation impacting performance
@@ -37,18 +38,18 @@ class NetworkServer:
 
         #Request Tracking Metrics
         self.total_requests_processed = 0
-        self.dropped_requests_server_offline = 0
         self.dropped_requests_queue_full = 0
-        self.dropped_requests_timeout = 0
+        self.dropped_requests_process_timeout = 0
+        self.dropped_requests_high_load = 0
 
-        #Start Process
+        #Start Processes
         for i in range(self.max_requests_concurrent):
             env.process(self.process_request())
 
+    """
+    Calculates the processing time for a given request based on the load size and the current CPU utilization.
+    """
     def calculate_processing_time(self, request: Request):
-        """
-        Calculates the processing time for a request based on the load size and the current CPU utilization.
-        """
         process_time = request.load_size / self.processing_power
         if self.cpu_utilization > self.increased_utilization:
             increased_utilization_over = (self.cpu_utilization - self.increased_utilization)
@@ -60,24 +61,38 @@ class NetworkServer:
             process_time *= server_degrade_factor
         return process_time
 
+    """
+    Updates the CPU utilization of the server by dividing the number of concurrent requests consumed
+    by request workers by the maximum number of concurrent requests; Assigns this value to cpu_utilization.
+    """
     def update_cpu_utilization(self):
         concurrent_requests = self.request_process_worker.count
         self.cpu_utilization = concurrent_requests / self.max_requests_concurrent
 
+    """
+    Updates the queue utilization of the server by dividing the length of the current request queue 
+    by the maximum length of the request queue; Assigns this value to process_queue_utilization.
+    """
     def update_queue_utilization(self):
         current_queue_length = len(self.request_queue.items)
         self.process_queue_utilization = current_queue_length / self.max_request_queue_len
 
+    """
+    Updates the health of the server by multiplying both CPU utilization and queue utilization by
+    their respective weights. Adds these values together and assigns them to server health. Server health is
+    designed to be an extrapolation of both the CPU and queue utilization to see how overwhelmed a server 
+    currently is.
+    """
     def update_server_health(self):
         self.server_health = (CPU_UTILIZATION_HEALTH_WEIGHT * self.cpu_utilization
                               + QUEUE_UTILIZATION_HEALTH_WEIGHT * self.process_queue_utilization)
 
+    """
+    Facilitates the server coming online and offline. There is logic for timeout variance in
+    order to avoid all X servers going down/up at the exact same moment. Furthermore, there is logic 
+    to prevent servers coming back online prior to adequate queue depletion.
+    """
     def shutdown_server(self):
-        """
-        Servers should be coming online and offline, where if the queue is full it is set offline and set online once timeout has elapsed.
-        """
-        self.is_server_online = False
-
         #Adding time variance to the base timeout period to prevent flat timeout across network. (Servers now will come back online at varied time units instead
         # of X servers coming back all at once).
         server_timeout_added_variance = SERVER_TIMEOUT + random.uniform(-0.5, 2.0)
@@ -97,36 +112,32 @@ class NetworkServer:
         print(
             f"[{self.env.now:.5f}] Server {self.server_id} back online. Queue: {len(self.request_queue.items)}/{self.max_request_queue_len}")
 
+    """
+    Method designed to receive a request and add it to the processing queue. 
+    """
     def receive_request(self, request: Request):
         #Return false if the incoming request has been seen by another server
         if request.is_routed:
             return False
 
-        #If the request hits the server while offline; increment the number of offline drop requests and return False
-        if not self.is_server_online:
-            self.dropped_requests_server_offline += 1
-            print(f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) has hit server {self.server_id} while offline and has been DROPPED.")
-            return False
-
+        #If the queue is full trigger immediate shutdown and drop the request
         current_queue_length = len(self.request_queue.items)
-        queue_capacity_threshold = self.max_request_queue_len - 2
-
         if current_queue_length >= self.max_request_queue_len:
-            if self.is_server_online and random.random() < 0.8:  # 80% chance to shutdown
-                print(f"[{self.env.now:.5f}] Server {self.server_id} FULL QUEUE, SHUTTING DOWN.")
-                self.env.process(self.shutdown_server())
+            self.is_server_online = False
+            print(f"[{self.env.now:.5f}] Server {self.server_id} QUEUE FULL, SHUTTING DOWN.")
+            self.env.process(self.shutdown_server())
             self.dropped_requests_queue_full += 1
             print(
-                f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED due to FULL QUEUE ({current_queue_length}/{self.max_request_queue_len}).")
+                f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED due to QUEUE FULL ({current_queue_length}/{self.max_request_queue_len}).")
             return False
-        elif current_queue_length >= queue_capacity_threshold:
-            if self.is_server_online and random.random() < 0.3:  # 30% chance for near-full queues
-                print(f"[{self.env.now:.5f}] Server {self.server_id} QUEUE THRESHOLD MET, PREEMPT SHUT DOWN.")
-                self.env.process(self.shutdown_server())
-            self.dropped_requests_queue_full += 1
-            print(
-                f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED due to EXCEEDS THRESHOLD ({current_queue_length}/{self.max_request_queue_len}).")
-            return False
+
+        #If the queue is not full but is at high utilization, reject requests based on the rejection rate
+        queue_capacity_threshold = HIGH_UTILIZATION * self.max_request_queue_len
+        if current_queue_length > queue_capacity_threshold:
+            if random.random() < HIGH_UTILIZATION_REJECTION_RATE:
+                self.dropped_requests_high_load += 1
+                print(f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED due to HIGH SERVER LOAD ({current_queue_length}/{self.max_request_queue_len}).")
+                return False
 
         #Request is stamped with an arrival time, marked as routed, and added to the request queue
         request.set_arrival_time(self.env.now)
@@ -143,7 +154,9 @@ class NetworkServer:
               f"(Health: {self.server_health})")
         return True
 
-    #TODO: Possibly return a request to the network router as a bucket where we can get a view of served and origin? - Can be scrapped
+    """
+    Method designed to process a request, either serving the request or dropping it.
+    """
     def process_request(self):
         while True:
             #Take a request from the request queue
@@ -161,7 +174,7 @@ class NetworkServer:
 
             #If the remaining time is <= 0 (exceeds REQUEST_TIMEOUT) the request is timed out and number of dropped requests is incremented
             if remaining_request_wait_time <= 0:
-                self.dropped_requests_timeout += 1
+                self.dropped_requests_process_timeout += 1
                 print(
                     f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED (timeout in queue). Queue length: {len(self.request_queue.items)}")
                 continue
@@ -196,7 +209,7 @@ class NetworkServer:
                 print(f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) FINISHED processing. "
                       f"Processing time: {request_process_time}, CPU utilization: {self.cpu_utilization} ({self.request_process_worker.count}/{self.max_requests_concurrent} workers active), Queue length: {len(self.request_queue.items)} (Server {self.server_id}).")
             else:
-                self.dropped_requests_timeout += 1
+                self.dropped_requests_process_timeout += 1
                 self.update_cpu_utilization()
                 self.update_server_health()
                 print(
