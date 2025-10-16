@@ -50,7 +50,7 @@ class DataCollector:
 
             #Counts any requests that were being processed by a worker process as processed requests as it
             # would've been marked served if had not been cut off by simulation timeframe
-            in_progress = server.current_requests_concurrent
+            in_progress = server.request_process_worker.count
             server.total_requests_processed += in_progress
 
             #Adds up simulation totals
