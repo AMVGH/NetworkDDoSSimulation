@@ -84,8 +84,9 @@ class NetworkServer:
     currently is.
     """
     def update_server_health(self):
-        self.server_health = (CPU_UTILIZATION_HEALTH_WEIGHT * self.cpu_utilization
+        self.server_health = 1.0 - (CPU_UTILIZATION_HEALTH_WEIGHT * self.cpu_utilization
                               + QUEUE_UTILIZATION_HEALTH_WEIGHT * self.process_queue_utilization)
+        self.server_health = max(0.0, self.server_health)
 
     """
     Facilitates the server coming online and offline. There is logic for timeout variance in

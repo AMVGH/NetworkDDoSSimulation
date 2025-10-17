@@ -24,7 +24,7 @@ class NetworkRouter:
             return False
         else:
             # The request's target server is the healthiest server of the servers included in the online pool.
-            target_server = min(online_servers, key=lambda server: server.server_health)
+            target_server = max(online_servers, key=lambda server: server.server_health)
             # Route the request to the server
             target_server.receive_request(request)
             return True
