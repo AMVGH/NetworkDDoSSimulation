@@ -1,16 +1,30 @@
 #Build initial data collection mechanisms
+import simpy
+
 from src.models.Botnet import Botnet
 from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
 from src.models.Network import Network
 
 
 class DataCollector:
-    def __init__(self, target_network: Network, botnet: Botnet, legitimate_traffic_network: LegitimateTrafficNetwork):
+    def __init__(self, env: simpy.Environment, target_network: Network, botnet: Botnet, legitimate_traffic_network: LegitimateTrafficNetwork):
+        self.env = env
         self.target_network = target_network
         self.botnet = botnet
         self.legitimate_traffic_network = legitimate_traffic_network
 
-        #Simulation Metrics
+        #Simulation Time-Series Metrics
+        self.time_series = {
+            'time': [],
+            'total_generated': [],
+            'total_served': [],
+            'total_drops_queue_full': [],
+            'total_drops_timeout': [],
+            'total_drops_high_load': [],
+            'total_drops_no_server': []
+        }
+
+        #Simulation Total Metrics
         self.total_generated_requests = 0
         self.total_requests_accounted_for = 0
         self.total_requests_served = 0
@@ -18,6 +32,30 @@ class DataCollector:
         self.total_requests_dropped_process_timeout = 0
         self.total_requests_dropped_high_load = 0
         self.total_requests_dropped_network_down = 0
+
+    def start_data_collection(self):
+        self.env.process(self.collect_data())
+
+    def collect_data(self):
+        while True:
+            current_time = self.target_network.env.now
+
+            # Record time
+            self.time_series['time'].append(current_time)
+
+            self.time_series['total_generated'].append(self.target_network.incoming_request_count)
+            self.time_series['total_served'].append(
+                sum(s.total_requests_processed for s in self.target_network.network_servers))
+            self.time_series['total_drops_queue_full'].append(
+                sum(s.dropped_requests_queue_full for s in self.target_network.network_servers))
+            self.time_series['total_drops_timeout'].append(
+                sum(s.dropped_requests_process_timeout for s in self.target_network.network_servers))
+            self.time_series['total_drops_high_load'].append(
+                sum(s.dropped_requests_high_load for s in self.target_network.network_servers))
+            self.time_series['total_drops_no_server'].append(self.target_network.dropped_no_server_available)
+
+            yield self.target_network.env.timeout(1.0)
+
 
 
     def print_simulation_outcomes(self):
