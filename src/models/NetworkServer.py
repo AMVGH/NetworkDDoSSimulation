@@ -38,6 +38,7 @@ class NetworkServer:
         self.request_queue = simpy.Store(env)
 
         #Request Tracking Metrics
+        self.total_requests_received = 0
         self.total_requests_processed = 0
         self.dropped_requests_queue_full = 0
         self.dropped_requests_process_timeout = 0
@@ -122,6 +123,8 @@ class NetworkServer:
         if request.is_routed:
             return False
 
+        self.total_requests_received += 1
+
         #If the queue is full trigger immediate shutdown and drop the request
         current_queue_length = len(self.request_queue.items)
         if current_queue_length >= self.max_request_queue_len:
@@ -144,6 +147,7 @@ class NetworkServer:
         #Request is stamped with an arrival time, marked as routed, and added to the request queue
         request.set_arrival_time(self.env.now)
         request.mark_routed()
+        request.set_seen_by(self.server_id)
         self.request_queue.put(request)
 
         #Since the request queue has been updated, the queue utilization and health are updated
@@ -177,9 +181,10 @@ class NetworkServer:
             #If the remaining time is <= 0 (exceeds REQUEST_TIMEOUT) the request is timed out and number of dropped requests is incremented
             if remaining_request_wait_time <= 0:
                 self.dropped_requests_process_timeout += 1
+                if hasattr(request, 'mark_failed'):
+                    request.mark_failed('DROPPED (timeout in queue)')
                 print(
                     # FEEDBACK - Console shows "Dropped Requests Process Timeout" - explain timeout values and why they're chosen
-
                     f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED (timeout in queue). Queue length: {len(self.request_queue.items)}")
                 continue
 
@@ -218,6 +223,7 @@ class NetworkServer:
                 self.update_server_health()
 
                 #FEEDBACK - Console shows "Dropped Requests Process Timeout" - explain timeout values and why they're chosen
-
+                if hasattr(request, 'mark_failed'):
+                    request.mark_failed('DROPPED (timeout waiting for worker)')
                 print(
                     f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED (timeout waiting for worker). Queue length: {len(self.request_queue.items)}, CPU utilization: {self.cpu_utilization:.2f} ({self.request_process_worker.count}/{self.max_requests_concurrent} workers active) (Server {self.server_id})")

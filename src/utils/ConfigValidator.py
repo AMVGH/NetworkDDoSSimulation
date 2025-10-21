@@ -1,7 +1,6 @@
-import src.config as config
 from src.config import *
 
-
+#TODO: Potentially Improve Validation for Ratios and whatnot
 def validate_config():
     if SIMULATION_DURATION < 60 or SIMULATION_DURATION > 1800:
         print("[ERROR] SIMULATION_DURATION must be between 60 and 1800")

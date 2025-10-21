@@ -24,3 +24,5 @@ class Network:
         accepted = self.network_router.route_request(request)
         if not accepted:
             self.dropped_no_server_available += 1
+            return False
+        else: return True

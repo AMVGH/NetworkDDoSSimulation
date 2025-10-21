@@ -3,7 +3,8 @@ from src.models.Network import Network
 from src.models.Botnet import Botnet
 from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
 from src.utils.DataCollector import DataCollector
-from src.utils.DataVisualizer import DataVisualizer
+from src.utils.DataProcessor import DataProcessor
+from src.utils.DataPlotter import DataPlotter
 from src.utils.GenericEnums import TRAFFICTYPES
 from config import *
 
@@ -33,8 +34,8 @@ class SimulationExecutive:
                                             target_network=self.target_network,
                                             botnet=self.botnet,
                                             legitimate_traffic_network=self.legitimate_network)
+        self.data_processor = DataProcessor(data_collector=self.data_collector)
 
-    #TODO: Build out and expand core functionality
     def run_simulation(self):
         #Runs the data collection process prior to starting traffic to get entire simulation snapshot
         self.data_collector.start_data_collection()
@@ -46,9 +47,10 @@ class SimulationExecutive:
 
         #Data Collection and Simulation Cleanup
         self.data_collector.cleanup_remaining_requests()
+        self.data_collector.print_metrics_at_intervals(interval=INTERVAL_OUTPUT_POLLING)
         self.data_collector.print_simulation_outcomes()
 
         #Passes data_collector context to the data_visualizer
-        data_visualizer = DataVisualizer(self.data_collector)
+        data_visualizer = DataPlotter(self.data_collector)
         data_visualizer.plot_all_results()
 

@@ -11,8 +11,10 @@ class BaseNetworkClient:
         self.client_id = client_id
         self.request_rate = request_rate
 
-    # TODO: Traffic Generation Enhancements
-    # - Resolve flat rate load sizes, should not be a consistent load size and on average mean load size for MALICIOUS > LEGITIMATE
+        #Metrics for request generation and responses
+        self.requests_sent = 0
+        self.successful_response = 0
+        self.no_response = 0
 
     def generate_request(self, source_id: str, traffic_type: str, load_size_lower: float, load_size_upper: float):
         while True:
@@ -22,7 +24,21 @@ class BaseNetworkClient:
             request = Request(
                 source_id,
                 traffic_type,
-                request_load
+                request_load,
+                on_completion=self.request_outcome_callback
             )
+            self.requests_sent += 1
+
             #Send request to the Network
-            self.target_network.process_request(request)
+            if not self.target_network.process_request(request):
+                #If the network is down and returns False, increment no_response
+                self.no_response += 1
+            else:
+                pass
+
+    def request_outcome_callback(self, request: Request, success: bool, failure_reason: str = None):
+        if success:
+            self.successful_response += 1  # Actually served
+        else:
+            self.no_response += 1  # Failed after being accepted
+
