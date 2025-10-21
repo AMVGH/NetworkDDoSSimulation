@@ -2,6 +2,22 @@ import matplotlib.pyplot as plot
 
 from src.utils.DataCollector import DataCollector
 
+#TODO: Check the other modules and refine the data being collected and plotted, update the plotting module and metric display
+# - Metrics to Display:
+#       - Server Response times
+#       - Ability to serve legitimate network traffic (throughput)
+#       - Performance degradation under load
+#       - Legitimate request drop rate
+#       - Request Response time
+#       - Queue length
+#       - Queue Utilization
+#       - CPU Utilization
+#       Response Metrics from Feedback:
+#       - Request Generation Rate vs. Served Rate over time
+#       - Per-server queue depths
+#       - Drop Rate Patterns
+#       - Legitimate vs Malicious Traffic Impact
+
 class DataVisualizer:
     def __init__(self, data_collector):
         self.data = data_collector.time_series

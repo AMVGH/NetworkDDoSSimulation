@@ -5,6 +5,7 @@ from src.models.Botnet import Botnet
 from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
 from src.models.Network import Network
 
+#TODO: Build output mechanisms for CSV, JSON, etc. --> Possibly do Data Calc --> revisit if best assert implementation
 
 class DataCollector:
     def __init__(self, env: simpy.Environment, target_network: Network, botnet: Botnet, legitimate_traffic_network: LegitimateTrafficNetwork):
@@ -57,7 +58,6 @@ class DataCollector:
             yield self.target_network.env.timeout(1.0)
 
 
-
     def print_simulation_outcomes(self):
         for server in self.target_network.network_servers:
             print()
@@ -66,7 +66,6 @@ class DataCollector:
             print(f"Dropped Requests Queue Full: {server.dropped_requests_queue_full}")
             print(f"Dropped Requests Process Timeout: {server.dropped_requests_process_timeout}")
             print(f"Dropped Requests High Load: {server.dropped_requests_high_load}")
-
 
         print()
         print("=========== FINAL SIMULATION OUTCOMES ==========")
@@ -77,6 +76,15 @@ class DataCollector:
         print(f"Total Drops (High Load): {self.total_requests_dropped_high_load}")
         print(f"Total Drops (No Server Available): {self.total_requests_dropped_network_down}")
         print(f"All Requests Accounted For: {self.total_requests_accounted_for == self.total_generated_requests}")
+
+        total_accounted = (self.total_requests_served +
+                           self.total_requests_dropped_queue_full +
+                           self.total_requests_dropped_process_timeout +
+                           self.total_requests_dropped_high_load +
+                           self.total_requests_dropped_network_down)
+
+        assert total_accounted == self.total_generated_requests, (f"Discrepancy Detected: {self.total_generated_requests} requests generated vs. "
+                                                                  f"{total_accounted} requests accounted for.")
 
     """
     Cleans up any remaining requests that were still in the simulation pipeline at the end of the simulation.

@@ -6,6 +6,7 @@ class NetworkRouter:
     def __init__(self, authorized_servers: list[NetworkServer]):
         self.authorized_servers = authorized_servers
 
+    #TODO: Verify if this is good for Adaptive Routing Algorithm Explanation --> Mentioned in Both Feedbacks
     """
     While a Distributed Adaptive Routing algorithm was initially described in M1, there are no network topology weights and a zero latency assumption
     for server communication. Since there are no metrics outlining network communication latency, nor the "distance" by which requests will travel, I have opted 
