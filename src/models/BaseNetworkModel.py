@@ -39,7 +39,6 @@ class BaseNetworkModel:
                 self.network_clients.append(legitimate_client)
                 continue
 
-    #TODO: Explain Botnet / Legitimate Network topology --> centralized C&C Topology that receives a single instruction set (implement a botmaster)
     def start_traffic(self):
         for client in self.network_clients:
             self.env.process(client.generate_request(

@@ -36,7 +36,7 @@ class Request:
             raise ValueError("Request already served")
         else:
             self.is_served = is_served
-            # NEW: Trigger success callback
+            #Trigger success callback
             if self.on_completion:
                 self.on_completion(self, True)
 
@@ -45,8 +45,7 @@ class Request:
             raise ValueError("Request already routed")
         else: self.is_routed = True
 
-    # NEW: Method to trigger failure callback
+    #Method to trigger failure callback
     def mark_failed(self, failure_reason: str):
-        """Mark request as failed and notify callback"""
         if self.on_completion and not self.is_served:
             self.on_completion(self, False, failure_reason)

@@ -6,11 +6,10 @@ class NetworkRouter:
     def __init__(self, authorized_servers: list[NetworkServer]):
         self.authorized_servers = authorized_servers
 
-    #TODO: Verify if this is good for Adaptive Routing Algorithm Explanation --> Mentioned in Both Feedbacks or RR
     """
     While a Distributed Adaptive Routing algorithm was initially described in M1, there are no network topology weights and a zero latency assumption
-    for server communication. Since there are no metrics outlining network communication latency, nor the "distance" by which requests will travel, I have opted 
-    to simplify the routing algorithm into a single load-balancing mechanism. The load balancing mechanism utilizes server_health, an extrapolation of CPU 
+    for server communication. Since there are no metrics defining network communication latency, nor the "distance" by which requests will travel, I have opted 
+    for a Health-Based Adaptive Load Balancing algorithm. The load balancing mechanism utilizes server_health, an extrapolation of CPU 
     utilization and queue utilization, in order to distribute traffic evenly among network servers. The aim of this simulation is to analyze network performance 
     degradation under load. As a result, I feel as though the implementation currently provided is adequate for analyzing performance degradation without
     impacting outcomes.

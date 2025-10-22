@@ -12,7 +12,6 @@ from src.config import (
     QUEUE_UTILIZATION_HEALTH_WEIGHT,
     OFFLINE_CLEAR_THRESHOLD,
     HIGH_UTILIZATION_REJECTION_RATE)
-#TODO: Validate that the queue processing model is accurate to queueing theory
 
 class NetworkServer:
     def __init__(self, env: simpy.Environment, server_id: str, processing_power: float, max_requests_concurrent: int, max_request_queue_len: int):
@@ -184,7 +183,6 @@ class NetworkServer:
                 if hasattr(request, 'mark_failed'):
                     request.mark_failed('DROPPED (timeout in queue)')
                 print(
-                    # FEEDBACK - Console shows "Dropped Requests Process Timeout" - explain timeout values and why they're chosen
                     f"[{self.env.now:.5f}] Request {request.request_id} (Origin {request.source_id}) DROPPED (timeout in queue). Queue length: {len(self.request_queue.items)}")
                 continue
 
@@ -222,7 +220,6 @@ class NetworkServer:
                 self.update_cpu_utilization()
                 self.update_server_health()
 
-                #FEEDBACK - Console shows "Dropped Requests Process Timeout" - explain timeout values and why they're chosen
                 if hasattr(request, 'mark_failed'):
                     request.mark_failed('DROPPED (timeout waiting for worker)')
                 print(
