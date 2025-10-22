@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plot
-from src.utils.DataHandler import DataCollector
+from src.utils.DataHandler import DataHandler
 
 class DataPlotter:
-    def __init__(self, data_collector: DataCollector):
+    def __init__(self, data_collector: DataHandler):
         self.data_collector = data_collector
 
     def visualize_all_results(self):

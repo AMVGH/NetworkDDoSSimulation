@@ -16,8 +16,8 @@ def validate_config():
     if not (5 <= NUM_SERVERS <= 50):
         print(f"[ERROR] NUM_SERVERS must be between 5 and 50 (current: {NUM_SERVERS})")
         return False
-    if not (5 <= REQUEST_TIMEOUT <= 30):
-        print(f"[ERROR] REQUEST_TIMEOUT must be between 5 and 30 seconds (current: {REQUEST_TIMEOUT})")
+    if not (1 <= REQUEST_TIMEOUT <= 30):
+        print(f"[ERROR] REQUEST_TIMEOUT must be between 1 and 30 seconds (current: {REQUEST_TIMEOUT})")
         return False
     if not (1 <= SERVER_TIMEOUT <= 10):
         print(f"[ERROR] SERVER_TIMEOUT must be between 1 and 10 seconds (current: {SERVER_TIMEOUT})")

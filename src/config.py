@@ -72,11 +72,11 @@ The total number of servers in the simulated target network.
     and unexpected behaviors arising from host machine specifications.  
 """
 
-REQUEST_TIMEOUT = 10
+REQUEST_TIMEOUT = 5
 """
 The simulation duration in simulated seconds that must elapse before a request is dropped.
     Data Type: Integer
-    Parameter Range: 5 - 30
+    Parameter Range: 1 - 30
     Justification: Based on user abandonment thresholds [7] and API response time
     standards [12], as well as backend response time polling from the reading outlined in the 
     research material. 

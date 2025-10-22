@@ -2,7 +2,7 @@ import simpy
 from src.models.Network import Network
 from src.models.Botnet import Botnet
 from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
-from src.utils.DataHandler import DataCollector
+from src.utils.DataHandler import DataHandler
 from src.utils.DataPlotter import DataPlotter
 from src.utils.GenericEnums import TRAFFICTYPES
 from config import *
@@ -29,10 +29,10 @@ class SimulationExecutive:
             LEGITIMATE_LOAD_SIZE_LOWER,
             LEGITIMATE_LOAD_SIZE_UPPER
         )
-        self.data_collector = DataCollector(env=self.env,
-                                            target_network=self.target_network,
-                                            botnet=self.botnet,
-                                            legitimate_traffic_network=self.legitimate_network)
+        self.data_collector = DataHandler(env=self.env,
+                                          target_network=self.target_network,
+                                          botnet=self.botnet,
+                                          legitimate_traffic_network=self.legitimate_network)
 
     def run_simulation(self):
         #Runs the data collection process prior to starting traffic to get entire simulation snapshot
@@ -46,6 +46,7 @@ class SimulationExecutive:
         #Data Collection and Simulation Cleanup
         self.data_collector.cleanup_remaining_requests()
         self.data_collector.print_final_outcomes()
+        self.data_collector.export_to_csv()
 
         #Passes data_collector context to the data_visualizer
         data_visualizer = DataPlotter(self.data_collector)

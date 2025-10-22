@@ -26,6 +26,7 @@ class NetworkServer:
         self.cpu_utilization = 0.0 #(Range 0.0 - 1.0)
         self.process_queue_utilization = 0.0 #(Range 0.0 - 1.0)
         self.server_health = 0 #Extrapolation of CPU and Queue Utilization
+        self.time_spent_offline = 0.0
         self.is_server_online = True
 
         #Utilization thresholds to help guide logic to model server degradation impacting performance
@@ -104,9 +105,12 @@ class NetworkServer:
         yield self.env.timeout(server_timeout_added_variance)
 
         #Server will continue to be offline if queue length exceeds the clear threshold. (Prevents the issue of server coming back online at full queue utilization)
+        additional_offline_window = 0
         while len(self.request_queue.items) > self.max_request_queue_len * OFFLINE_CLEAR_THRESHOLD:
+            additional_offline_window += 1
             yield self.env.timeout(1) #Timeout for a single time unit
 
+        self.time_spent_offline = server_timeout_added_variance + additional_offline_window
         self.is_server_online = True
 
         #Prevents the issue of a newly restarted server being overwhelmed with traffic again. By setting CPU utilization to 0.1 the network routing
