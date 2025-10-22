@@ -3,6 +3,7 @@ import simpy
 from src.models.Network import Network
 from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
 from src.models.Botnet import Botnet
+from src.config import INTERVAL_DATA_POLLING
 
 #TODO: Build output mechanisms for CSV, JSON, etc. --> Possibly do Data Calc --> revisit if best assert implementation
 
@@ -24,7 +25,7 @@ class DataCollector:
 
         #Time-Series Metrics
         self.simulation_series = {
-            'time': [],
+            'timestamp': [],
             'total_generated': [],
             'total_served': [],
             'total_drops_queue_full': [],
@@ -92,7 +93,7 @@ class DataCollector:
             self.legitimate_network_series['successful_response'].append(total_successful_response)
             self.legitimate_network_series['no_response'].append(total_no_response)
 
-            yield self.env.timeout(1.0)
+            yield self.env.timeout(INTERVAL_DATA_POLLING)
 
     def collect_malicious_traffic_network_data(self):
         while True:
@@ -112,7 +113,7 @@ class DataCollector:
             self.botnet_series['successful_response'].append(total_successful_response)
             self.botnet_series['no_response'].append(total_no_response)
 
-            yield self.env.timeout(1.0)
+            yield self.env.timeout(INTERVAL_DATA_POLLING)
 
     def collect_server_data(self):
         while True:
@@ -137,13 +138,13 @@ class DataCollector:
                 server_data['service']['total_requests_dropped_queue_full'].append(server.dropped_requests_queue_full)
                 server_data['service']['total_requests_dropped_process_timeout'].append(server.dropped_requests_process_timeout)
                 server_data['service']['total_requests_dropped_high_load'].append(server.dropped_requests_high_load)
-            yield self.env.timeout(1.0)
+            yield self.env.timeout(INTERVAL_DATA_POLLING)
 
     def collect_simulation_data(self):
         while True:
             current_time = self.env.now
 
-            self.simulation_series['time'].append(current_time)
+            self.simulation_series['timestamp'].append(current_time)
             self.simulation_series['total_generated'].append(self.target_network.incoming_request_count)
             self.simulation_series['total_served'].append(
                 sum(s.total_requests_processed for s in self.target_network.network_servers))
@@ -155,7 +156,7 @@ class DataCollector:
                 sum(s.dropped_requests_high_load for s in self.target_network.network_servers))
             self.simulation_series['total_drops_no_server'].append(self.target_network.dropped_no_server_available)
 
-            yield self.env.timeout(1.0)
+            yield self.env.timeout(INTERVAL_DATA_POLLING)
 
     """
     Cleans up any remaining requests that were still in the simulation pipeline at the end of the simulation.
@@ -229,16 +230,16 @@ class DataCollector:
         print("=" * 60)
 
         # Find all time indices that are multiples of the interval
-        if not self.simulation_series['time']:
+        if not self.simulation_series['timestamp']:
             print("No data collected yet.")
             return
 
-        max_time = max(self.simulation_series['time'])
-        intervals = [t for t in self.simulation_series['time'] if t % interval == 0]
+        max_time = max(self.simulation_series['timestamp'])
+        intervals = [t for t in self.simulation_series['timestamp'] if t % interval == 0]
 
         if not intervals:
             print(f"No data points at exact {interval}-second intervals.")
-            intervals = [self.simulation_series['time'][0]]  # Print at least first data point
+            intervals = [self.simulation_series['timestamp'][0]]  # Print at least first data point
 
         for interval_time in intervals:
             self._print_interval_metrics(interval_time)
@@ -250,7 +251,7 @@ class DataCollector:
         print("=" * 60)
 
         # Find index for this time in simulation series
-        sim_idx = self._find_index_for_time(self.simulation_series['time'], interval_time)
+        sim_idx = self._find_index_for_time(self.simulation_series['timestamp'], interval_time)
         legit_idx = self._find_index_for_time(self.legitimate_network_series['timestamp'], interval_time)
         botnet_idx = self._find_index_for_time(self.botnet_series['timestamp'], interval_time)
 

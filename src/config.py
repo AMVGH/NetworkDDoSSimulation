@@ -47,6 +47,13 @@ Total simulation duration in simulated seconds.
     Justification: Models DDoS attack durations from one simulated minute to a simulated half-hour.
 """
 
+INTERVAL_DATA_POLLING = 5
+"""
+Allows the user to adjust the interval that time series metrics are collected throughout the 
+simulation and displayed during visualization.
+    Data Type: Integer
+"""
+
 INTERVAL_OUTPUT_POLLING = 30
 """
 Allows the user to adjust the interval that displays time series metrics in the console.
