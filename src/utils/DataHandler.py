@@ -3,9 +3,11 @@ import simpy
 from src.models.Network import Network
 from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
 from src.models.Botnet import Botnet
-from src.config import INTERVAL_DATA_POLLING
+from src.config import *
+from src.utils.ProbabilityEngine import ProbabilityEngine, ProbabilityMetrics
 
-#TODO: Build output mechanisms for CSV, JSON, etc. --> Possibly do Data Calc --> revisit if best assert implementation
+
+#TODO: Build output mechanisms for CSV, JSON, etc. --> Possibly do Data Calc
 
 class DataCollector:
     def __init__(self, env: simpy.Environment, target_network: Network, botnet: Botnet, legitimate_traffic_network: LegitimateTrafficNetwork):
@@ -13,6 +15,9 @@ class DataCollector:
         self.target_network = target_network
         self.botnet = botnet
         self.legitimate_traffic_network = legitimate_traffic_network
+
+        #Houses probability algorithms
+        self.probability_engine = ProbabilityEngine()
 
         #Simulation Total Metrics
         self.total_generated_requests = 0
@@ -69,11 +74,19 @@ class DataCollector:
                 }
             }
 
+        self.probability_series = {
+            'timestamp': [],
+            'bandwidth_exhaustion_prob': [],
+            'victim_resource_depletion_prob': [],
+            'successful_attack_prob': []
+        }
+
     def start_data_collection(self):
         self.env.process(self.collect_simulation_data())
         self.env.process(self.collect_server_data())
         self.env.process(self.collect_legitimate_traffic_network_data())
         self.env.process(self.collect_malicious_traffic_network_data())
+        self.env.process(self.collect_probability_data())
 
     def collect_legitimate_traffic_network_data(self):
         while True:
@@ -158,6 +171,85 @@ class DataCollector:
 
             yield self.env.timeout(INTERVAL_DATA_POLLING)
 
+    def collect_probability_data(self):
+        while True:
+            while True:
+                current_time = self.env.now
+
+                current_attack_rate = self.calculate_current_attack_rate()
+                memory_utilization = self.calculate_average_memory_utilization()
+                successful_malicious_requests = sum(
+                    client.successful_response for client in self.botnet.network_clients
+                )
+                current_server_capacity = self.calculate_current_server_capacity()
+
+                total_legit_sent = sum(
+                    client.requests_sent for client in self.legitimate_traffic_network.network_clients)
+                total_legit_success = sum(
+                    client.successful_response for client in self.legitimate_traffic_network.network_clients)
+                legitimate_success_rate = total_legit_success / max(1, total_legit_sent)
+
+                simulation_state = {
+                    'current_attack_rate': current_attack_rate,
+                    'memory_utilization': memory_utilization,
+                    'successful_malicious_requests': successful_malicious_requests,
+                    'current_server_capacity': current_server_capacity,
+                    'legitimate_success_rate': legitimate_success_rate  # ADD THIS LINE
+                }
+
+                probability_metrics = self.probability_engine.update_probabilities(
+                    simulation_state, current_time
+                )
+
+                self.probability_series['timestamp'].append(current_time)
+                self.probability_series['bandwidth_exhaustion_prob'].append(
+                    probability_metrics.bandwidth_exhaustion_prob
+                )
+                self.probability_series['victim_resource_depletion_prob'].append(
+                    probability_metrics.victim_resource_depletion_prob
+                )
+                self.probability_series['successful_attack_prob'].append(
+                    probability_metrics.successful_attack_prob
+                )
+
+                yield self.env.timeout(INTERVAL_DATA_POLLING)
+
+    def calculate_current_attack_rate(self) -> float:
+        if not self.botnet.network_clients:
+            return 0.0
+
+        if not hasattr(self, 'last_attack_calculation_time'):
+            self.last_attack_calculation_time = self.env.now
+            self.last_total_malicious_requests = 0
+            return MALICIOUS_TRAFFIC_RATE * MALICIOUS_CLIENT_COUNT
+
+        current_total = sum(client.requests_sent for client in self.botnet.network_clients)
+        time_diff = self.env.now - self.last_attack_calculation_time
+
+        if time_diff > 0:
+            requests_diff = current_total - self.last_total_malicious_requests
+            actual_rate = requests_diff / time_diff
+        else:
+            actual_rate = MALICIOUS_TRAFFIC_RATE * MALICIOUS_CLIENT_COUNT
+
+        self.last_attack_calculation_time = self.env.now
+        self.last_total_malicious_requests = current_total
+
+        return actual_rate
+
+    def calculate_average_memory_utilization(self) -> float:
+        if not self.target_network.network_servers:
+            return 0.0
+        total_utilization = sum(server.cpu_utilization for server in self.target_network.network_servers)
+        return total_utilization / len(self.target_network.network_servers)
+
+    """
+    Network wide ability to process incoming requests
+    """
+    def calculate_current_server_capacity(self) -> float:
+        online_servers = [s for s in self.target_network.network_servers if s.server_health > 0]
+        return len(online_servers) * PROCESSING_POWER
+
     """
     Cleans up any remaining requests that were still in the simulation pipeline at the end of the simulation.
     (i.e.: If 50,000 requests are generated in X timeframe, but at the end of X 5,000 are still in pipeline, results will not properly
@@ -187,6 +279,11 @@ class DataCollector:
         self.total_generated_requests = self.target_network.incoming_request_count
         self.total_requests_accounted_for = (self.total_requests_served + self.total_requests_dropped_queue_full + self.total_requests_dropped_process_timeout
                                              + self.total_requests_dropped_high_load + self.total_requests_dropped_network_down)
+
+    def print_final_outcomes(self):
+        self.print_probability_analysis()
+        self.print_metrics_at_intervals(interval=INTERVAL_OUTPUT_POLLING)
+        self.print_simulation_outcomes()
 
     def print_simulation_outcomes(self):
         print("\n" + "=" * 60)
@@ -224,12 +321,10 @@ class DataCollector:
             f"{total_accounted} requests accounted for.")
 
     def print_metrics_at_intervals(self, interval=10):
-        """Print all metrics at specified time intervals"""
         print("\n" + "=" * 60)
         print("TIME-SERIES METRICS AT INTERVALS")
         print("=" * 60)
 
-        # Find all time indices that are multiples of the interval
         if not self.simulation_series['timestamp']:
             print("No data collected yet.")
             return
@@ -242,20 +337,18 @@ class DataCollector:
             intervals = [self.simulation_series['timestamp'][0]]  # Print at least first data point
 
         for interval_time in intervals:
-            self._print_interval_metrics(interval_time)
+            self.print_interval_metrics(interval_time)
 
-    def _print_interval_metrics(self, interval_time):
-        """Print metrics for a specific time interval"""
+    def print_interval_metrics(self, interval_time):
         print(f"\n" + "=" * 60)
         print(f"METRICS AT TIME: {interval_time:.1f}")
         print("=" * 60)
 
-        # Find index for this time in simulation series
-        sim_idx = self._find_index_for_time(self.simulation_series['timestamp'], interval_time)
-        legit_idx = self._find_index_for_time(self.legitimate_network_series['timestamp'], interval_time)
-        botnet_idx = self._find_index_for_time(self.botnet_series['timestamp'], interval_time)
+        sim_idx = self.find_index_for_time(self.simulation_series['timestamp'], interval_time)
+        legit_idx = self.find_index_for_time(self.legitimate_network_series['timestamp'], interval_time)
+        botnet_idx = self.find_index_for_time(self.botnet_series['timestamp'], interval_time)
+        prob_idx = self.find_index_for_time(self.probability_series['timestamp'], interval_time)
 
-        # Simulation-level metrics
         if sim_idx is not None:
             print(f"\n=== SIMULATION OVERVIEW ===")
             print(f"  Total Generated: {self.simulation_series['total_generated'][sim_idx]}")
@@ -274,6 +367,13 @@ class DataCollector:
                             max(1, self.simulation_series['total_generated'][sim_idx]))
             print(f"  Success Rate: {success_rate:.2%}")
             print(f"  Drop Rate: {total_drops / max(1, self.simulation_series['total_generated'][sim_idx]):.2%}")
+
+        # DDoS Attack Probability Metrics
+        if prob_idx is not None:
+            print(f"\n=== DDoS ATTACK PROBABILITIES ===")
+            print(f"  Bandwidth Exhaustion: {self.probability_series['bandwidth_exhaustion_prob'][prob_idx]:.2%}")
+            print(f"  Resource Depletion: {self.probability_series['victim_resource_depletion_prob'][prob_idx]:.2%}")
+            print(f"  Successful Attack: {self.probability_series['successful_attack_prob'][prob_idx]:.2%}")
 
         # Legitimate traffic metrics
         if legit_idx is not None:
@@ -300,8 +400,8 @@ class DataCollector:
         # Server metrics
         print(f"\n=== SERVER STATUS ===")
         for server_id, server_data in self.server_series.items():
-            util_idx = self._find_index_for_time(server_data['utilization']['timestamp'], interval_time)
-            service_idx = self._find_index_for_time(server_data['service']['timestamp'], interval_time)
+            util_idx = self.find_index_for_time(server_data['utilization']['timestamp'], interval_time)
+            service_idx = self.find_index_for_time(server_data['service']['timestamp'], interval_time)
 
             if util_idx is not None and service_idx is not None:
                 print(f"\n  Server [{server_id}]:")
@@ -319,13 +419,34 @@ class DataCollector:
                 print(
                     f"    Drops - High Load: {server_data['service']['total_requests_dropped_high_load'][service_idx]}")
 
-    def _find_index_for_time(self, time_series, target_time, tolerance=0.1):
+    def print_probability_analysis(self):
+        print("\n" + "=" * 60)
+        print("DDoS ATTACK PROBABILITY ANALYSIS")
+        print("=" * 60)
+
+        avg_probs = self.probability_engine.get_average_probabilities()
+        capacity_info = self.probability_engine.get_system_capacity_info()
+
+        print(f"\nSystem Capacity Info:")
+        print(f"  Total Processing: {capacity_info['total_processing_capacity']} req/sec")
+        print(f"  Capacity Threshold: {capacity_info['capacity_threshold']} req/sec")
+
+        print(f"\nAverage Probabilities Over Simulation:")
+        print(f"  Bandwidth Exhaustion: {avg_probs['bandwidth_exhaustion_probability']:.2%}")
+        print(f"  Resource Depletion: {avg_probs['victim_resource_depletion_probability']:.2%}")
+        print(f"  Successful Attack: {avg_probs['successful_attack_probability']:.2%}")
+
+        trends = self.probability_engine.get_probability_trend()
+        if trends['bandwidth_exhaustion']:
+            print(f"\nRecent Probability Trends:")
+            print(f"  Bandwidth Exhaustion: {trends['bandwidth_exhaustion'][-1]:.2%}")
+            print(f"  Resource Depletion: {trends['resource_depletion'][-1]:.2%}")
+            print(f"  Successful Attack: {trends['successful_attack'][-1]:.2%}")
+
+    def find_index_for_time(self, time_series, target_time, tolerance=0.1):
         if not time_series:
             return None
-
-        # Find exact match or closest within tolerance
         for i, time_val in enumerate(time_series):
             if abs(time_val - target_time) <= tolerance:
                 return i
-
         return None

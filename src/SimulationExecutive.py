@@ -2,7 +2,7 @@ import simpy
 from src.models.Network import Network
 from src.models.Botnet import Botnet
 from src.models.LegitimateTrafficNetwork import LegitimateTrafficNetwork
-from src.utils.DataCollector import DataCollector
+from src.utils.DataHandler import DataCollector
 from src.utils.DataPlotter import DataPlotter
 from src.utils.GenericEnums import TRAFFICTYPES
 from config import *
@@ -45,8 +45,7 @@ class SimulationExecutive:
 
         #Data Collection and Simulation Cleanup
         self.data_collector.cleanup_remaining_requests()
-        self.data_collector.print_metrics_at_intervals(interval=INTERVAL_OUTPUT_POLLING)
-        self.data_collector.print_simulation_outcomes()
+        self.data_collector.print_final_outcomes()
 
         #Passes data_collector context to the data_visualizer
         data_visualizer = DataPlotter(self.data_collector)

@@ -1,10 +1,5 @@
 import matplotlib.pyplot as plot
-from src.utils.DataCollector import DataCollector
-
-# TODO: Implement to Calculate Expected vs. Actual
-# - Probability of Depletion of Bandwidth Exhaustion
-# - Probability of Depletion of Victim Resources
-# - Probability of Successful Attack
+from src.utils.DataHandler import DataCollector
 
 class DataPlotter:
     def __init__(self, data_collector: DataCollector):
@@ -95,7 +90,7 @@ class DataPlotter:
     def create_request_traffic_comparison_window(self):
         #Defines subplots to be visualized within the request comparison window
         fig, (ax1, ax2, ax3) = plot.subplots(3, 1, figsize=(12, 10))
-        fig.suptitle('Generation Comparison: Legitimate vs Malicious Traffic Comparison, Success Rates, and Server Health', fontsize=16, fontweight='bold')
+        fig.suptitle('Generation Comparison: Legitimate vs Malicious Traffic Comparison, Success Rates, and Health', fontsize=16, fontweight='bold')
 
         #Subplots
         self.graph_traffic_generation_rates(ax1)

@@ -12,6 +12,7 @@ from src.config import (
     QUEUE_UTILIZATION_HEALTH_WEIGHT,
     OFFLINE_CLEAR_THRESHOLD,
     HIGH_UTILIZATION_REJECTION_RATE)
+from src.utils.GenericEnums import PROCESSENUMS, VARIANCEENUMS
 
 class NetworkServer:
     def __init__(self, env: simpy.Environment, server_id: str, processing_power: float, max_requests_concurrent: int, max_request_queue_len: int):
@@ -55,10 +56,11 @@ class NetworkServer:
         if self.cpu_utilization > self.increased_utilization:
             increased_utilization_over = (self.cpu_utilization - self.increased_utilization)
             if self.cpu_utilization < self.high_utilization:
-                server_degrade_factor = 1.0 + (increased_utilization_over * 2.0)
+                server_degrade_factor = (PROCESSENUMS.BASE_TIME.value + (increased_utilization_over * PROCESSENUMS.INCREASED_FACTOR_INCREASED_RANGE.value))
             else:
                 high_utilization_over = (self.cpu_utilization - self.high_utilization)
-                server_degrade_factor = 1.0 + (increased_utilization_over * 3.0) + (high_utilization_over * 5.0)
+                server_degrade_factor = (PROCESSENUMS.BASE_TIME.value + (increased_utilization_over * PROCESSENUMS.INCREASED_FACTOR_HIGH_RANGE.value)
+                                         + (high_utilization_over * PROCESSENUMS.HIGH_FACTOR_HIGH_RANGE.value))
             process_time *= server_degrade_factor
         return process_time
 
@@ -85,6 +87,7 @@ class NetworkServer:
     currently is.
     """
     def update_server_health(self):
+        #Inverts the server health to be make more sense conceptually
         self.server_health = 1.0 - (CPU_UTILIZATION_HEALTH_WEIGHT * self.cpu_utilization
                               + QUEUE_UTILIZATION_HEALTH_WEIGHT * self.process_queue_utilization)
         self.server_health = max(0.0, self.server_health)
@@ -97,7 +100,7 @@ class NetworkServer:
     def shutdown_server(self):
         #Adding time variance to the base timeout period to prevent flat timeout across network. (Servers now will come back online at varied time units instead
         # of X servers coming back all at once).
-        server_timeout_added_variance = SERVER_TIMEOUT + random.uniform(-0.5, 2.0)
+        server_timeout_added_variance = SERVER_TIMEOUT + random.uniform(-VARIANCEENUMS.LOWERBOUND.value, VARIANCEENUMS.UPPERBOUND.value)
         yield self.env.timeout(server_timeout_added_variance)
 
         #Server will continue to be offline if queue length exceeds the clear threshold. (Prevents the issue of server coming back online at full queue utilization)
