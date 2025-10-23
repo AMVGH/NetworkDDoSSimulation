@@ -12,13 +12,13 @@ The aim of this project is to analyze the impact of malicious network traffic on
 Ensure that **Python Version 3.x** is installed on your local machine and have the required packages installed:
 
 ```bash
-pip install simpy numpy matplotlib pytest
+pip install simpy matplotlib
 ```
 
 Dependency versions can be found in [requirements.txt](requirements.txt)
 
 ### Running the Simulation
-In order to run the simulation clone the repository to your local environment and make sure all necessary dependencies are installed. After this, simply update the simulation configuration variables found in [config.py](src/config.py), once the configuration is set to your liking simply navigate to [main.py](src/main.py) and run the simulation. At the current moment, simulation outcomes will be written to the terminal.
+In order to run the simulation clone the repository to your local environment and make sure all necessary dependencies are installed. After this, simply update the simulation configuration variables found in [config.py](src/config.py), once the configuration is set to your liking simply navigate to [main.py](src/main.py) and run the simulation.
 
 ## Project Status
 At the current moment, class models and their properties have been implemented across the board with the core simulation functionality being captured. Users can now configure the simulation parameters found in [config.py](src/config.py) to their liking and get simulation results regarding the total requests generated, total served requests, and total request drops with their causes. Furthermore, the user can see a breakdown per server to see how these metrics deviate between server instances. While the core implementation logic is captured, the simulation as a whole requires further refinement in order to demonstrate the real world behaviors of a network under load as accurately as possible. Methods handling data visualization, as well as enhanced data collection and routing have yet to be implemented. Furthermore, testing logic has yet to be implemented, and there are some minor bugs concerning utilization metrics that need to be ironed out before moving forward. Overall, the initial implmentation serves as a very strong proof of concept and deviates very little from what is outlined in the original proposal.  
