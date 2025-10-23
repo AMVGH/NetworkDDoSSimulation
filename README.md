@@ -21,7 +21,24 @@ Dependency versions can be found in [requirements.txt](requirements.txt)
 In order to run the simulation clone the repository to your local environment and make sure all necessary dependencies are installed. After this, simply update the simulation configuration variables found in [config.py](src/config.py), once the configuration is set to your liking simply navigate to [main.py](src/main.py) and run the simulation.
 
 ## Project Status
-At the current moment, class models and their properties have been implemented across the board with the core simulation functionality being captured. Users can now configure the simulation parameters found in [config.py](src/config.py) to their liking and get simulation results regarding the total requests generated, total served requests, and total request drops with their causes. Furthermore, the user can see a breakdown per server to see how these metrics deviate between server instances. While the core implementation logic is captured, the simulation as a whole requires further refinement in order to demonstrate the real world behaviors of a network under load as accurately as possible. Methods handling data visualization, as well as enhanced data collection and routing have yet to be implemented. Furthermore, testing logic has yet to be implemented, and there are some minor bugs concerning utilization metrics that need to be ironed out before moving forward. Overall, the initial implmentation serves as a very strong proof of concept and deviates very little from what is outlined in the original proposal.  
+The current implementation of the malicious network traffic simulation includes all core models and algorithms
+outlined in the initial proposal, and delivers all of the expected functionality that was necessary to capture the
+system dynamics described in M1. Users can configure the simulation parameters via the provided configuration
+file and receive detailed, comprehensive data surrounding simulation outcomes. The implementation supports
+the following key features:
+      • Legitimate and Malicious Network Request Generation
+      • Modified Adaptive Routing to Facilitate Network Routing Decisions
+      • Bandwidth Exhaustion, Depletion of Resources, and Successful Attack Probability Tooling
+      • Modified Centralized C&C Topology for Issuing Malicious Client Instructions
+      • FIFO Network Server Request Processing Logic
+      • Comprehensive Data Collection and Management Tooling
+      • Network Representation Proportional to Real-World Enterprise Network Surface Area and Processing Capability
+      • Live Simulation Logging with State Data
+      • Data Visualization and Exporting Tooling
+      • Server Shutdown Mechanisms
+      • Comprehensive Calculation Tooling for Payloads and Simulation Outcomes
+All of the implementation supporting these key features are either supported by literature provided in the
+initial proposal, or are supported by additional research conducted over the course of development.
 
 ## Architecture Overview
 The main components in the simulation include the following: 
