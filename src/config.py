@@ -38,6 +38,9 @@ The configuration parameters are based on research gathered from the following:
             URL: https://www.netscout.com/threatreport/1h2022/wp-content/uploads/2022/09/SEC04_BOTNETS.pdf
 """
 
+# Run Management
+RUN_ID = 1
+
 # Simulation Parameters
 SIMULATION_DURATION = 120
 """

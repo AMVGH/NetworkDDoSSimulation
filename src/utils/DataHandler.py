@@ -452,7 +452,7 @@ class DataHandler:
 
         #Create output file
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"{output_dir}/NetworkDDoSSimulation_Results_{timestamp}.csv"
+        filename = f"{output_dir}/NetworkDDoSSimulation_Results_Run{RUN_ID}_{timestamp}.csv"
 
         #Open and write to the .csv file
         with open(filename, 'w', newline='') as csvfile:
