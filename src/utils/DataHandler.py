@@ -452,7 +452,7 @@ class DataHandler:
 
         #Create output file
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"{output_dir}/NetworkDDoSSimulation_Results_Run{RUN_ID}_{timestamp}.csv"
+        filename = f"{output_dir}/Run{RUN_ID}_NetworkDDoSSimulation_Consolidated_Outcomes.csv"
 
         #Open and write to the .csv file
         with open(filename, 'w', newline='') as csvfile:
@@ -534,7 +534,7 @@ class DataHandler:
                 "Drops Timeout", "Drops Timeout Rate",
                 "Drops High Load", "Drops High Load Rate",
                 "Total Drops", "Total Drop Rate",
-                "Max CPU_Utilization", "Avg CPU Utilization",
+                "Max CPU Utilization", "Avg CPU Utilization",
                 "Max Queue Utilization", "Avg Queue Utilization",
                 "Max Queue Length", "Avg Queue Length",
                 "Min Health Score", "Avg Health Score",
