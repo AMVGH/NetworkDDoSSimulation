@@ -44,7 +44,7 @@ The parameters in this file are a default baseline for a network under low stres
 RUN_ID = 1
 
 # Simulation Parameters
-SIMULATION_DURATION = 300
+SIMULATION_DURATION = 900
 """
 Total simulation duration in simulated seconds.
     Data Type: Integer
