@@ -12,7 +12,7 @@ The aim of this project is to analyze the impact of malicious network traffic on
 Ensure that **Python Version 3.x** is installed on your local machine and have the required packages installed:
 
 ```bash
-pip install simpy matplotlib
+pip install simpy matplotlib pytest
 ```
 
 Dependency versions can be found in [requirements.txt](requirements.txt)
