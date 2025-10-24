@@ -444,7 +444,6 @@ class DataHandler:
                 return i
         return None
 
-    #TODO: Update Headers and Document
     def export_to_csv(self):
         #Create output directory
         output_dir = "output"

@@ -1,2 +1,3 @@
 simpy~=4.1.1
 matplotlib~=3.10.6
+pytest~=8.4.2
