@@ -49,9 +49,9 @@ The main components in the simulation include the following:
 11. **DataHandler (Renamed from DataCollector)**
     - **Description:** Class designed to be an all encompassing body for data collection, calculation, manipulation, and exporting, as opposed to the single collection device outlined in M1. The class attributes captures all the behavior outlined by the attributes in M1, and expands the functionality of the class substantially by allocating functionality for collecting time-series metrics, data calculation, data manipulation, and exporting. Many class attributes have been added in order to achieve the final implementation. 
 12. **SimulationExecutive**
-    - **Description:** Class designed to house all the entities of the simulation and run the simulation. The implementation remains almost identical to the implementation outlined in the proposal, with the only deviation being simulationDuration being one of the parameters now included in (config.py)[src/config.py].
+    - **Description:** Class designed to house all the entities of the simulation and run the simulation. The implementation remains almost identical to the implementation outlined in the proposal, with the only deviation being simulationDuration being one of the parameters now included in [config.py](src/config.py).
 13. **ConfigValidator (NEW)**
-    - **Description:** Validates the parameters provided in (config.py)[src/config.py] to ensure that all user-configured parameters are reasonable and will not cause errors.
+    - **Description:** Validates the parameters provided in [config.py](src/config.py) to ensure that all user-configured parameters are reasonable and will not cause errors.
 14. **GenericEnums (NEW)**
     - **Description:** Houses miscellaneous values such as non-configurable weights and ranges in order to reduce the presence of 'magic' numbers throughout the solution and make the simulation more robust. 
 15. **DataPlotter (NEW)**
