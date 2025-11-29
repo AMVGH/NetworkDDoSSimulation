@@ -59,4 +59,7 @@ The main components in the simulation include the following:
 16. **ProbabilityEngine (NEW)**
     - **Description:** Implements the probability algorithms and relevant calculations for Probability of Depletion of Bandwidth, Probability of Depletion of Victim Resources, and Probability of Successful Attack.
 17. **TestingEngine (NEW)**
-    - **Description:** Houses all relevant testing functionality. 
+    - **Description:** Houses all relevant testing functionality.
+
+## Example Outputs
+Simulation outcomes should display results in an in-depth, comma separated format similar to the following examples: https://github.com/AMVGH/NetworkRunData 
