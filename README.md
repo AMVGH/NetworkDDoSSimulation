@@ -23,6 +23,9 @@ In order to run the simulation clone the repository to your local environment an
 ## Project Status
 The current implementation of the malicious network traffic simulation includes all core models and algorithms outlined in the initial proposal, and delivers all the expected functionality that was necessary to capture the system dynamics described in M1. Users can configure the simulation parameters via the provided configuration file and receive detailed, comprehensive data surrounding simulation outcomes. The implementation supports the following key features: **a)** Legitimate and Malicious Network Request Generation, **b)** Modified Adaptive Routing to Facilitate Network Routing Decisions, **c)** Bandwidth Exhaustion, Depletion of Resources, and Successful Attack Probability Tooling, **d)** Modified Centralized C&C Topology for Issuing Malicious Client Instructions, **e)** FIFO Network Server Request Processing Logic, **f)** Comprehensive Data Collection and Management Tooling, **g)** Network Representation Proportional to Real-World Enterprise Network Surface Area and Processing Capability, **h)** Live Simulation Logging with State Data, **i)** Data Visualization and Exporting Tooling, **j)** Server Shutdown Mechanisms, and **k)** Comprehensive Calculation Tooling for Payloads and Simulation Outcomes. All of the implementation supporting these key features are either supported by literature provided in the initial proposal, or are supported by additional research conducted over the course of development.
 
+## Example Outputs
+Simulation outcomes should display results in an in-depth, comma separated format similar to the following examples: https://github.com/AMVGH/NetworkRunData 
+
 ## Architecture Overview
 The main components in the simulation include the following: 
 
@@ -60,6 +63,3 @@ The main components in the simulation include the following:
     - **Description:** Implements the probability algorithms and relevant calculations for Probability of Depletion of Bandwidth, Probability of Depletion of Victim Resources, and Probability of Successful Attack.
 17. **TestingEngine (NEW)**
     - **Description:** Houses all relevant testing functionality.
-
-## Example Outputs
-Simulation outcomes should display results in an in-depth, comma separated format similar to the following examples: https://github.com/AMVGH/NetworkRunData 
