@@ -58,7 +58,7 @@ The main components in the simulation include the following:
 14. **GenericEnums (NEW)**
     - **Description:** Houses miscellaneous values such as non-configurable weights and ranges in order to reduce the presence of 'magic' numbers throughout the solution and make the simulation more robust. 
 15. **DataPlotter (NEW)**
-    - **Description:** Houses all data visualization mechanisms and build graphics concerning simulation outcome metrics.
+    - **Description:** Houses all data visualization mechanisms and builds graphics concerning simulation outcome metrics.
 16. **ProbabilityEngine (NEW)**
     - **Description:** Implements the probability algorithms and relevant calculations for Probability of Depletion of Bandwidth, Probability of Depletion of Victim Resources, and Probability of Successful Attack.
 17. **TestingEngine (NEW)**
